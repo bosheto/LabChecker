@@ -1,4 +1,4 @@
-module example/web-service-gin
+module github.com/bosheto/LabChecker
 
 go 1.23.0
 
