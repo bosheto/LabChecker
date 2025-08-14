@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -45,6 +46,12 @@ func addHost(c *gin.Context) {
 	newHost.ID = len(hostMap)
 	hostMap[newHost.ID] = newHost
 	c.JSON(http.StatusCreated, newHost)
+	b, err := json.Marshal(hostMap)
+	if err != nil {
+		return
+	}
+	write_file(b)
+
 }
 
 // #TODO need to fix the updating

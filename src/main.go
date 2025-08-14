@@ -6,6 +6,7 @@ import (
 
 // # We are storing the hosts in two places
 // var hosts = []host{}
+
 var hostMap = make(map[int]host)
 
 // var hostMapIP = make(map[string]int)
@@ -26,6 +27,7 @@ func initHosts() {
 	// for i := 0; i < len(hosts); i++ {
 	// 	hostMapIP[testHosts[i].IP] = hosts[i].ID
 	// }
+
 }
 
 func main() {
