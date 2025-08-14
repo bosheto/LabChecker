@@ -1,58 +1,40 @@
 package main
 
 import (
-	"fmt"
-	"net"
-	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"net"
+
 	"github.com/tatsushid/go-fastping"
 )
 
-var pinger = fastping.NewPinger()
-
-func runPings(c *gin.Context) {
-	c.String(http.StatusOK, "ping")
-	pingHostMachine()
-
+func pingHostFast(ip string) bool {
+	p := fastping.NewPinger()
+	ra, err := net.ResolveIPAddr("ip4:icmp", ip)
+	if err != nil {
+		return false
+	}
+	p.AddIPAddr(ra)
+	result := false
+	p.OnRecv = func(addr *net.IPAddr, rtt time.Duration) {
+		result = true
+	}
+	p.OnIdle = func() {}
+	p.MaxRTT = 2 * time.Second
+	_ = p.Run()
+	return result
 }
 
-func pingHostMachine() {
-
-	for i := 0; i < len(hostMap); i++ {
-		pinger.AddIP(hostMap[i].IP)
-	}
-
-	pinger.OnRecv = func(addr *net.IPAddr, rtt time.Duration) {
-		fmt.Printf("IP Addr: %s receive, RTT: %v\n", addr.String(), rtt)
-		for i := 0; i < len(hostMap); i++ {
-			host := hostMap[i]
-			if host.IP == addr.String() {
-				host.returned = true
-			} else {
-				host.returned = false
+func pingAllHostsPeriodically() {
+	for {
+		for i := range hosts {
+			status := "Down"
+			if pingHostFast(hosts[i].IP) {
+				status = "Up"
+				hosts[i].LastUp = time.Now().Format(time.RFC3339)
 			}
-			hostMap[i] = host
+			hosts[i].Status = status
 		}
-	}
-
-	pinger.OnIdle = func() {
-		fmt.Println("finish")
-		for i := 0; i < len(hostMap); i++ {
-			host := hostMap[i]
-			if host.returned {
-				host.Status = "Up"
-				host.LastUp = time.Now().Format(time.UnixDate)
-			} else {
-				host.Status = "Down"
-			}
-			hostMap[i] = host
-		}
-	}
-
-	err := pinger.Run()
-	if err != nil {
-		fmt.Println(err)
+		time.Sleep(30 * time.Second)
 	}
 }
