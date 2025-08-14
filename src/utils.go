@@ -7,8 +7,8 @@ type jsonError struct {
 }
 
 func ip_exists(ip string) bool {
-	for i := 0; i < len(hostMap); i++ {
-		if hostMap[i].IP == ip {
+	for i := 0; i < len(hosts); i++ {
+		if hosts[i].IP == ip {
 			return true
 		}
 	}

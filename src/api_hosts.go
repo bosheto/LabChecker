@@ -9,7 +9,7 @@ import (
 )
 
 func getHosts(c *gin.Context) {
-	c.JSON(http.StatusOK, hostMap)
+	c.JSON(http.StatusOK, hosts)
 }
 
 func getHost(c *gin.Context) {
@@ -22,13 +22,14 @@ func getHost(c *gin.Context) {
 		return
 	}
 
-	value, exists := hostMap[hostID]
+	// value, exists := hosts[hostID]
 
-	if exists {
-		c.JSON(http.StatusOK, value)
-	} else {
+	if hostID > len(hosts)-1 || hostID < 0 {
 		c.JSON(http.StatusNotFound, jsonError{Error: "No hosts with ip: " + string(id)})
+	} else {
+		c.JSON(http.StatusOK, hosts[hostID])
 	}
+
 }
 
 func addHost(c *gin.Context) {
@@ -43,10 +44,11 @@ func addHost(c *gin.Context) {
 		return
 	}
 
-	newHost.ID = len(hostMap)
-	hostMap[newHost.ID] = newHost
+	newHost.ID = len(hosts)
+	// hostMap[newHost.ID] = newHost
+	hosts = append(hosts, newHost)
 	c.JSON(http.StatusCreated, newHost)
-	b, err := json.Marshal(hostMap)
+	b, err := json.Marshal(hosts)
 	if err != nil {
 		return
 	}
@@ -62,17 +64,16 @@ func updateHost(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, jsonError{Error: err.Error()})
 		return
 	}
-
-	if _, exists := hostMap[updatedHost.ID]; exists {
-		host := hostMap[updatedHost.ID]
-		host.IP = updatedHost.IP
-		host.Name = updatedHost.Name
-		host.Version = updatedHost.Version
-		hostMap[updatedHost.ID] = host
-		c.JSON(http.StatusOK, hostMap[updatedHost.ID])
+	id := updatedHost.ID
+	if id < 0 || id > len(hosts)-1 {
+		c.JSON(http.StatusBadRequest, jsonError{Error: "No host with id: " + string(id)})
 	} else {
-		c.JSON(http.StatusBadRequest, jsonError{Error: "No host with id: "})
+		hosts[id].IP = updatedHost.IP
+		hosts[id].Name = updatedHost.Name
+		hosts[id].Version = updatedHost.Version
+		c.JSON(http.StatusOK, hosts[id])
 	}
+
 }
 
 // func deleteHost(c *gin.Context){

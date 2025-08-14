@@ -1,38 +1,40 @@
 package main
 
 import (
+	"encoding/json"
+	"os"
+
 	"github.com/gin-gonic/gin"
 )
 
 // # We are storing the hosts in two places
 // var hosts = []host{}
 
-var hostMap = make(map[int]host)
+// var hostMap = make(map[int]host)
+var hosts = []host{
+	// {ID: 0, IP: "10.238.105.130", Status: "Down", returned: false, LastUp: ""},
+	// {ID: 1, IP: "10.238.105.145", Status: "Down", returned: false, LastUp: ""},
+}
 
 // var hostMapIP = make(map[string]int)
 
 func initHosts() {
 
-	testHosts := []host{
-		{ID: 0, IP: "10.238.105.130", Status: "Down", returned: false, LastUp: ""},
-		{ID: 1, IP: "10.238.105.145", Status: "Donw", returned: false, LastUp: ""},
+	jsonData, err := os.ReadFile("hosts.json")
+	if err != nil {
+		panic(err)
 	}
-
-	// hosts = append(hosts, testHosts...)
-
-	for i := 0; i < len(testHosts); i++ {
-		hostMap[testHosts[i].ID] = testHosts[i]
+	err = json.Unmarshal(jsonData, &hosts)
+	if err != nil {
+		panic(err)
 	}
-
-	// for i := 0; i < len(hosts); i++ {
-	// 	hostMapIP[testHosts[i].IP] = hosts[i].ID
-	// }
-
 }
 
 func main() {
 
 	initHosts()
+
+	go pingAllHostsPeriodically()
 
 	// Intialize Router
 	router := gin.Default()
@@ -42,7 +44,7 @@ func main() {
 	// GET
 	router.GET("/hosts", getHosts)
 	router.GET("/hosts/:id", getHost)
-	router.GET("/ping", runPings)
+	// router.GET("/ping", runPings)
 
 	// POST
 	router.POST("/hosts", addHost)
